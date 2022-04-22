@@ -19,6 +19,7 @@ import io.micronaut.aop.InterceptPhase;
 import io.micronaut.aop.InterceptedMethod;
 import io.micronaut.aop.MethodInterceptor;
 import io.micronaut.aop.MethodInvocationContext;
+import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Nullable;
 import io.micronaut.inject.ExecutableMethod;
 import io.micronaut.validation.validator.ExecutableMethodValidator;
@@ -92,7 +93,8 @@ public class ValidatingInterceptor implements MethodInterceptor<Object, Object> 
                         .validateParameters(
                                 context.getTarget(),
                                 targetMethod,
-                                context.getParameterValues()
+                                context.getParameterValues(),
+                                getValidationGroups(context)
                         );
                 if (!constraintViolations.isEmpty()) {
                     throw new ConstraintViolationException(constraintViolations);
@@ -105,7 +107,8 @@ public class ValidatingInterceptor implements MethodInterceptor<Object, Object> 
                 Set<ConstraintViolation<Object>> constraintViolations = micronautValidator.validateParameters(
                         context.getTarget(),
                         executableMethod,
-                        context.getParameterValues());
+                        context.getParameterValues(),
+                        getValidationGroups(context));
                 if (!constraintViolations.isEmpty()) {
                     throw new ConstraintViolationException(constraintViolations);
                 }
@@ -117,11 +120,15 @@ public class ValidatingInterceptor implements MethodInterceptor<Object, Object> 
                         switch (interceptedMethod.resultType()) {
                             case PUBLISHER:
                                 return interceptedMethod.handleResult(
-                                        ((ReactiveValidator) micronautValidator).validatePublisher(interceptedMethod.interceptResultAsPublisher())
+                                        ((ReactiveValidator) micronautValidator).validatePublisher(
+                                                interceptedMethod.interceptResultAsPublisher(),
+                                                getValidationGroups(context))
                                 );
                             case COMPLETION_STAGE:
                                 return interceptedMethod.handleResult(
-                                        ((ReactiveValidator) micronautValidator).validateCompletionStage(interceptedMethod.interceptResultAsCompletionStage())
+                                        ((ReactiveValidator) micronautValidator).validateCompletionStage(
+                                                interceptedMethod.interceptResultAsCompletionStage(),
+                                                getValidationGroups(context))
                                 );
                             case SYNCHRONOUS:
                                 return validateReturnMicronautValidator(context, executableMethod);
@@ -142,7 +149,11 @@ public class ValidatingInterceptor implements MethodInterceptor<Object, Object> 
 
     private Object validateReturnMicronautValidator(MethodInvocationContext<Object, Object> context, ExecutableMethod<Object, Object> executableMethod) {
         Object result = context.proceed();
-        Set<ConstraintViolation<Object>> constraintViolations = micronautValidator.validateReturnValue(context.getTarget(), executableMethod, result);
+        Set<ConstraintViolation<Object>> constraintViolations = micronautValidator.validateReturnValue(
+                context.getTarget(),
+                executableMethod,
+                result,
+                getValidationGroups(context));
         if (!constraintViolations.isEmpty()) {
             throw new ConstraintViolationException(constraintViolations);
         }
@@ -155,7 +166,8 @@ public class ValidatingInterceptor implements MethodInterceptor<Object, Object> 
             Set<ConstraintViolation<Object>> constraintViolations = executableValidator.validateReturnValue(
                     context.getTarget(),
                     targetMethod,
-                    result
+                    result,
+                    getValidationGroups(context)
             );
             if (!constraintViolations.isEmpty()) {
                 throw new ConstraintViolationException(constraintViolations);
@@ -166,5 +178,10 @@ public class ValidatingInterceptor implements MethodInterceptor<Object, Object> 
 
     private boolean hasValidationAnnotation(MethodInvocationContext<Object, Object> context) {
         return context.hasStereotype(Validator.ANN_VALID) || context.hasStereotype(Validator.ANN_CONSTRAINT);
+    }
+
+    private Class<?>[] getValidationGroups(MethodInvocationContext<Object, Object> context) {
+      final AnnotationValue<Validated> annotation = context.getAnnotation(Validated.class);
+      return annotation == null ? new Class<?>[0] : annotation.classValues("groups");
     }
 }
