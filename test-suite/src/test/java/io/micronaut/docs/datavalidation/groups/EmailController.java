@@ -24,7 +24,6 @@ import io.micronaut.http.annotation.Post;
 import io.micronaut.validation.Validated;
 
 import javax.validation.Valid;
-import javax.validation.groups.Default;
 import java.util.Collections;
 //end::imports[]
 
@@ -40,7 +39,7 @@ public class EmailController {
     }
 
     @Post("/send")
-    @Validated(groups = {Default.class, FinalValidation.class}) // <3>
+    @Validated(groups = FinalValidation.class) // <3>
     public HttpResponse send(@Body @Valid Email email) { // <4>
         return HttpResponse.ok(Collections.singletonMap("msg", "OK"));
     }

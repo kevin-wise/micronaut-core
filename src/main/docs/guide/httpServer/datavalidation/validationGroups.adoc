@@ -2,7 +2,7 @@ You can enforce a subset of constraints using https://beanvalidation.org/2.0/spe
 
 snippet::io.micronaut.docs.datavalidation.groups.FinalValidation[tags="clazz", indent=0]
 
-<1> Define a custom validation group.
+<1> Define a custom validation group. This one extends `Default` so any validations done with this group will include constraints in the `Default` group.
 
 snippet::io.micronaut.docs.datavalidation.groups.Email[tags="clazz", indent=0]
 
@@ -15,8 +15,8 @@ snippet::io.micronaut.docs.datavalidation.groups.EmailController[tags="imports,c
 
 <1> Annotating with api:validation.Validated[] without specifying groups means that the `Default` group will be active. Since this is defined on the class, it will apply to all methods.
 <2> Constraints in the `Default` validation group will be enforced, inheriting from the class. The effect is that `@NotBlank` on `email.recipient` will not be enforced when this method is called.
-<3> Specifying `groups` means that these validation groups will be enforced when this method is called.
-<4> Constraints in the `Default` and `FinalValidation` validation groups will be enforced. The effect is that both `@NotBlank` constraints in `email` will be enforced when this method is called.
+<3> Specifying `groups` means that these validation groups will be enforced when this method is called.  Note that `FinalValidation` extends `Default` so constraints from both groups will be enforced.
+<4> Constraints in the `Default` and `FinalValidation` validation groups will be enforced, since `FinalValidation` extends `Default`. The effect is that both `@NotBlank` constraints in `email` will be enforced when this method is called.
 
 Validation of POJOs using the default validation group is shown in the following test:
 

@@ -24,7 +24,6 @@ import io.micronaut.http.annotation.Post
 import io.micronaut.validation.Validated
 
 import javax.validation.Valid
-import javax.validation.groups.Default
 //end::imports[]
 
 @Requires(property = "spec.name", value = "datavalidationgroups")
@@ -39,7 +38,7 @@ class EmailController {
     }
 
     @Post("/send")
-    @Validated(groups = [Default, FinalValidation]) // <3>
+    @Validated(groups = [FinalValidation]) // <3>
     HttpResponse send(@Body @Valid Email email) { // <4>
         HttpResponse.ok(msg: "OK")
     }

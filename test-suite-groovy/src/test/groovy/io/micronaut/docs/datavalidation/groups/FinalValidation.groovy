@@ -17,6 +17,8 @@ package io.micronaut.docs.datavalidation.groups;
 
 //tag::clazz[]
 
-interface FinalValidation {} // <1>
+import javax.validation.groups.Default
+
+interface FinalValidation extends Default {} // <1>
 
 //end::clazz[]
